@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+model CustomerPoints {
+  id         String   @id @default(cuid())
+  shop       String
+  customerId String
+  points     Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Reward {
+  id         String   @id @default(cuid())
+  shop       String
+  variantId  String
+  productId  String
+  title      String
+  pointsCost Int
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([shop, variantId])
+}
+
+model PointsReservation {
+  id         String   @id @default(cuid())
+  shop       String
+  customerId String
+  variantId  String
+  points     Int
+  status     String   @default("active")
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model PointsTransaction {
+  id         String    @id @default(cuid())
+  shop       String
+  customerId String
+  orderId    String?
+  type       String
+  points     Int
+  note       String?
+  status     String    @default("completed")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime? @updatedAt
+}
+
+model LoyaltySettings {
+  id                       String   @id @default(cuid())
+  shop                     String   @unique
+  pointsPerEuro            Int      @default(100)
+  requireCartForRedemption Boolean  @default(false)
+  enableVirtualPoints      Boolean  @default(true)
+  primaryColor             String?
+  accentColor              String?
+  textColor                String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model OfflineSubmission {
+  id                String    @id @default(cuid())
+  shopDomain        String    @map("shop")
+  customerId        String
+  customerEmail     String?
+  fileUrl           String
+  fileName          String?
+  mimeType          String?
+
+  status            String    @default("pending")
+  decisionSource    String    @default("manual")
+
+  awardedPoints     Int?      @map("pointsGranted")
+
+  reviewedAt        DateTime?
+  reviewNotes       String?   @map("note")
+  rejectionReason   String?
+
+  merchantName      String?   @map("pharmacyName")
+  purchaseDate      DateTime?
+  totalAmount       Float?    @map("purchaseAmount")
+  receiptNumber     String?
+  ocrRaw            Json?
+  ocrConfidence     Float?
+
+  fileHash          String?
+  duplicateCheckKey String?
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([shopDomain, customerId])
+  @@index([shopDomain, status])
+  @@map("OfflineTicketSubmission")
+}

@@ -1,0 +1,24 @@
+client_id = "e215539342b226107055ddd9f5665ff3"
+name = "Rewardly Offline"
+application_url = "https://loyalty-app-engine.onrender.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+[access_scopes]
+scopes = "read_customers,write_customers,read_orders,write_app_proxy"
+
+[auth]
+redirect_urls = [ "https://loyalty-app-engine.onrender.com/api/auth" ]
