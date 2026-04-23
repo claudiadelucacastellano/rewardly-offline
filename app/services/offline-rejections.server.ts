@@ -2,7 +2,6 @@ import prisma from "../db.server";
 
 type RejectSubmissionInput = {
   submissionId: string;
-  reviewedBy?: string | null;
   reviewNotes?: string | null;
   decisionSource?: "manual" | "automatic" | "automatic_flagged";
   rejectionReason?: string | null;
@@ -10,7 +9,6 @@ type RejectSubmissionInput = {
 
 export async function rejectSubmission({
   submissionId,
-  reviewedBy = null,
   reviewNotes = null,
   decisionSource = "manual",
   rejectionReason = null,
@@ -40,7 +38,6 @@ export async function rejectSubmission({
     data: {
       status: "rejected",
       reviewedAt: new Date(),
-      reviewedBy,
       reviewNotes,
       decisionSource,
       rejectionReason,

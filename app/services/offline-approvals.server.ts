@@ -1,9 +1,9 @@
 import prisma from "../db.server";
+import type { Prisma } from "@prisma/client";
 
 type ApproveSubmissionInput = {
   submissionId: string;
   awardedPoints: number;
-  reviewedBy?: string | null;
   reviewNotes?: string | null;
   decisionSource?: "manual" | "automatic" | "automatic_flagged";
 };
@@ -11,7 +11,6 @@ type ApproveSubmissionInput = {
 export async function approveSubmission({
   submissionId,
   awardedPoints,
-  reviewedBy = null,
   reviewNotes = null,
   decisionSource = "manual",
 }: ApproveSubmissionInput) {
@@ -23,7 +22,7 @@ export async function approveSubmission({
     throw new Error("awardedPoints debe ser un entero mayor que 0");
   }
 
-  return await prisma.$transaction(async (tx: typeof prisma) => {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const submission = await tx.offlineSubmission.findUnique({
       where: { id: submissionId },
     });
@@ -83,7 +82,6 @@ export async function approveSubmission({
         status: "approved",
         awardedPoints,
         reviewedAt: new Date(),
-        reviewedBy,
         reviewNotes,
         decisionSource,
       },

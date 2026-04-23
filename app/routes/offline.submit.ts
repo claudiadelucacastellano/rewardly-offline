@@ -41,12 +41,29 @@ export async function action({ request }: ActionFunctionArgs) {
       return json({ ok: false, error: "Falta el archivo del ticket" }, { status: 400 });
     }
 
+    const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+
+    if (!allowedTypes.includes(file.type)) {
+      return json({ ok: false, error: "Formato no permitido" }, { status: 400 });
+    }
+
     const fileHash = await generateFileHash(file);
     const duplicateCheckKey = buildDuplicateCheckKey({
       shopDomain,
       customerId,
       fileHash,
     });
+
+    const existing = await prisma.offlineSubmission.findFirst({
+      where: { duplicateCheckKey },
+    });
+
+    if (existing) {
+      return json(
+        { ok: false, error: "Este ticket ya ha sido enviado" },
+        { status: 409 }
+      );
+    }
 
     const storedFile = await storeTicketFile(file);
 

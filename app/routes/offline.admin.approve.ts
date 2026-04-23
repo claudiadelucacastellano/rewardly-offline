@@ -11,7 +11,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const submissionId = String(formData.get("submissionId") || "").trim();
     const awardedPointsRaw = String(formData.get("awardedPoints") || "").trim();
-    const reviewedByRaw = String(formData.get("reviewedBy") || "").trim();
     const reviewNotesRaw = String(formData.get("reviewNotes") || "").trim();
 
     if (!submissionId) {
@@ -34,7 +33,6 @@ export async function action({ request }: ActionFunctionArgs) {
     const submission = await approveSubmission({
       submissionId,
       awardedPoints,
-      reviewedBy: reviewedByRaw || null,
       reviewNotes: reviewNotesRaw || null,
       decisionSource: "manual",
     });

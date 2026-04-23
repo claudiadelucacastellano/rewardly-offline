@@ -10,7 +10,6 @@ export async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
 
     const submissionId = String(formData.get("submissionId") || "").trim();
-    const reviewedByRaw = String(formData.get("reviewedBy") || "").trim();
     const reviewNotesRaw = String(formData.get("reviewNotes") || "").trim();
     const rejectionReasonRaw = String(formData.get("rejectionReason") || "").trim();
 
@@ -20,7 +19,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const submission = await rejectSubmission({
       submissionId,
-      reviewedBy: reviewedByRaw || null,
       reviewNotes: reviewNotesRaw || null,
       decisionSource: "manual",
       rejectionReason: rejectionReasonRaw || null,
