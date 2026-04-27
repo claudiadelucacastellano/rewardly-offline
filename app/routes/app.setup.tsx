@@ -179,8 +179,6 @@ function CodeBlock() {
         <div class="rewardly-file-box">
         <input type="file" id="file" accept="image/*,application/pdf" required>
     <div id="preview" style="margin-top:12px;"></div>
-
-    <div id="preview" style="margin-top:12px;"></div>
         </div>
 
         <p>Formatos permitidos: JPG, PNG o PDF (máx. 10MB)</p>
@@ -209,9 +207,9 @@ function CodeBlock() {
 
     if (file.type.startsWith("image/")) {
         const url = URL.createObjectURL(file);
-        preview.innerHTML = `<img src="${url}" style="max-width:100%; border-radius:10px; margin-top:10px;" />`;
+        preview.innerHTML = '<img src="' + url + '" style="max-width:100%; border-radius:10px; margin-top:10px;" />';
     } else {
-        preview.innerHTML = `<p style="margin-top:10px;">📄 ${file.name}</p>`;
+        preview.innerHTML = '<p style="margin-top:10px;">📄 ' + file.name + '</p>';
     }
     });
     const status = document.getElementById("status");
