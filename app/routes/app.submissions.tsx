@@ -8,7 +8,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
     orderBy: { createdAt: "desc" },
   });
 
-  return { submissions };
+  const origin = new URL(request.url).origin;
+
+  const normalizedSubmissions = submissions.map((s) => ({
+    ...s,
+    fileUrl:
+      s.fileUrl.startsWith("http")
+        ? s.fileUrl
+        : `${origin}${s.fileUrl.startsWith("/") ? "" : "/"}${s.fileUrl}`,
+  }));
+
+  return { submissions: normalizedSubmissions };
 }
 
 export default function AdminSubmissionsPage() {
