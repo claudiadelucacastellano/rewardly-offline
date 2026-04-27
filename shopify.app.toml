@@ -22,3 +22,8 @@ scopes = "read_customers,write_customers,read_orders,write_app_proxy"
 
 [auth]
 redirect_urls = [ "https://rewardly-offline.onrender.com/api/auth" ]
+
+[app_proxy]
+url = "https://rewardly-offline.onrender.com"
+subpath = "rewardly-offline"
+prefix = "apps"
