@@ -1,12 +1,9 @@
-import type { LoaderFunctionArgs } from "react-router";
-import { redirect } from "react-router";
-import { authenticate } from "../shopify.server";
-
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
-  return redirect("/app/submissions");
-};
-
 export default function Index() {
-  return null;
+  return (
+    <div style={{ padding: 40 }}>
+      <h1>Rewardly Offline</h1>
+      <p>App cargada correctamente.</p>
+      <a href="/app/submissions">Ir a tickets offline</a>
+    </div>
+  );
 }
