@@ -3,6 +3,8 @@ import type { LoaderFunctionArgs } from "react-router";
 import { useState } from "react";
 import prisma from "../db.server";
 
+type FilterStatus = "pending" | "approved" | "rejected" | "all";
+
 export async function loader({ request }: LoaderFunctionArgs) {
   const submissions = await prisma.offlineSubmission.findMany({
     orderBy: { createdAt: "desc" },
@@ -20,40 +22,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return { submissions: normalizedSubmissions };
 }
 
-function statusBadge(status: string) {
-  const styles: Record<string, { bg: string; color: string; label: string }> = {
-    pending: { bg: "#fff7ed", color: "#b45309", label: "Pendiente" },
-    approved: { bg: "#ecfdf3", color: "#027a48", label: "Aprobado" },
-    rejected: { bg: "#fef3f2", color: "#b42318", label: "Rechazado" },
-  };
-
-  const current = styles[status] || {
-    bg: "#f2f4f7",
-    color: "#344054",
-    label: status,
-  };
-
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        padding: "4px 10px",
-        borderRadius: 999,
-        background: current.bg,
-        color: current.color,
-        fontSize: 13,
-        fontWeight: 700,
-      }}
-    >
-      {current.label}
-    </span>
-  );
-}
-
 export default function AdminSubmissionsPage() {
   const { submissions } = useLoaderData<typeof loader>();
   const [processingId, setProcessingId] = useState("");
   const [pointsById, setPointsById] = useState<Record<string, string>>({});
+  const [filter, setFilter] = useState<FilterStatus>("pending");
+
+  const pendingCount = submissions.filter((s) => s.status === "pending").length;
+  const approvedCount = submissions.filter((s) => s.status === "approved").length;
+  const rejectedCount = submissions.filter((s) => s.status === "rejected").length;
+
+  const filteredSubmissions =
+    filter === "all" ? submissions : submissions.filter((s) => s.status === filter);
 
   async function approve(submissionId: string) {
     const awardedPoints = Number(pointsById[submissionId] || "0");
@@ -117,9 +97,32 @@ export default function AdminSubmissionsPage() {
         <p style={{ color: "#667085", marginTop: 8 }}>
           Revisa tickets enviados por clientes, valida la compra y asigna puntos.
         </p>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
+          <FilterButton
+            label={`Pendientes (${pendingCount})`}
+            active={filter === "pending"}
+            onClick={() => setFilter("pending")}
+          />
+          <FilterButton
+            label={`Aprobados (${approvedCount})`}
+            active={filter === "approved"}
+            onClick={() => setFilter("approved")}
+          />
+          <FilterButton
+            label={`Rechazados (${rejectedCount})`}
+            active={filter === "rejected"}
+            onClick={() => setFilter("rejected")}
+          />
+          <FilterButton
+            label={`Todos (${submissions.length})`}
+            active={filter === "all"}
+            onClick={() => setFilter("all")}
+          />
+        </div>
       </div>
 
-      {submissions.length === 0 && (
+      {filteredSubmissions.length === 0 && (
         <div
           style={{
             border: "1px solid #e5e7eb",
@@ -128,15 +131,15 @@ export default function AdminSubmissionsPage() {
             background: "#fff",
           }}
         >
-          <h3 style={{ marginTop: 0 }}>No hay tickets aún</h3>
+          <h3 style={{ marginTop: 0 }}>No hay tickets en esta vista</h3>
           <p style={{ color: "#667085", marginBottom: 0 }}>
-            Cuando un cliente suba un ticket desde la landing, aparecerá aquí.
+            Cambia el filtro para revisar otros estados.
           </p>
         </div>
       )}
 
       <div style={{ display: "grid", gap: 18 }}>
-        {submissions.map((s) => (
+        {filteredSubmissions.map((s) => (
           <div
             key={s.id}
             style={{
@@ -179,10 +182,7 @@ export default function AdminSubmissionsPage() {
               <Info label="Customer ID" value={s.customerId} />
               <Info label="Email" value={s.customerEmail || "-"} />
               <Info label="Archivo" value={s.fileName || "Ver ticket"} link={s.fileUrl} />
-              <Info
-                label="Creado"
-                value={new Date(s.createdAt).toLocaleString("es-ES")}
-              />
+              <Info label="Creado" value={new Date(s.createdAt).toLocaleString("es-ES")} />
             </div>
 
             {s.status === "pending" && (
@@ -230,16 +230,7 @@ export default function AdminSubmissionsPage() {
                 <button
                   onClick={() => approve(s.id)}
                   disabled={processingId === s.id}
-                  style={{
-                    height: 40,
-                    padding: "0 18px",
-                    borderRadius: 10,
-                    border: "0",
-                    background: "#111827",
-                    color: "#fff",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
+                  style={primaryButton}
                 >
                   {processingId === s.id ? "Procesando..." : "Aprobar"}
                 </button>
@@ -247,21 +238,13 @@ export default function AdminSubmissionsPage() {
                 <button
                   onClick={() => reject(s.id)}
                   disabled={processingId === s.id}
-                  style={{
-                    height: 40,
-                    padding: "0 18px",
-                    borderRadius: 10,
-                    border: "1px solid #d0d5dd",
-                    background: "#fff",
-                    color: "#344054",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
+                  style={secondaryButton}
                 >
                   {processingId === s.id ? "Procesando..." : "Rechazar"}
                 </button>
               </div>
             )}
+
             {s.status === "approved" && (
               <div
                 style={{
@@ -284,6 +267,63 @@ export default function AdminSubmissionsPage() {
   );
 }
 
+function statusBadge(status: string) {
+  const styles: Record<string, { bg: string; color: string; label: string }> = {
+    pending: { bg: "#fff7ed", color: "#b45309", label: "Pendiente" },
+    approved: { bg: "#ecfdf3", color: "#027a48", label: "Aprobado" },
+    rejected: { bg: "#fef3f2", color: "#b42318", label: "Rechazado" },
+  };
+
+  const current = styles[status] || {
+    bg: "#f2f4f7",
+    color: "#344054",
+    label: status,
+  };
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        padding: "4px 10px",
+        borderRadius: 999,
+        background: current.bg,
+        color: current.color,
+        fontSize: 13,
+        fontWeight: 700,
+      }}
+    >
+      {current.label}
+    </span>
+  );
+}
+
+function FilterButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: "8px 14px",
+        borderRadius: 999,
+        border: active ? "0" : "1px solid #d0d5dd",
+        background: active ? "#111827" : "#fff",
+        color: active ? "#fff" : "#344054",
+        fontWeight: 700,
+        cursor: "pointer",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
 function Info({
   label,
   value,
@@ -295,9 +335,7 @@ function Info({
 }) {
   return (
     <div>
-      <div style={{ fontSize: 12, color: "#667085", marginBottom: 4 }}>
-        {label}
-      </div>
+      <div style={{ fontSize: 12, color: "#667085", marginBottom: 4 }}>{label}</div>
       {link ? (
         <a href={link} target="_blank" rel="noreferrer">
           {value}
@@ -308,3 +346,25 @@ function Info({
     </div>
   );
 }
+
+const primaryButton = {
+  height: 40,
+  padding: "0 18px",
+  borderRadius: 10,
+  border: "0",
+  background: "#111827",
+  color: "#fff",
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const secondaryButton = {
+  height: 40,
+  padding: "0 18px",
+  borderRadius: 10,
+  border: "1px solid #d0d5dd",
+  background: "#fff",
+  color: "#344054",
+  fontWeight: 700,
+  cursor: "pointer",
+};
