@@ -111,7 +111,7 @@ export default function AdminSubmissionsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+    <div style={{ maxWidth: 1180, margin: "0 auto", fontFamily: "Inter, sans-serif" }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ margin: 0, fontSize: 32 }}>Tickets offline</h1>
         <p style={{ color: "#667085", marginTop: 8 }}>
@@ -260,6 +260,21 @@ export default function AdminSubmissionsPage() {
                 >
                   {processingId === s.id ? "Procesando..." : "Rechazar"}
                 </button>
+              </div>
+            )}
+            {s.status === "approved" && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "#ecfdf3",
+                  color: "#027a48",
+                  fontWeight: 700,
+                  display: "inline-block",
+                }}
+              >
+                +{s.awardedPoints || 0} puntos otorgados
               </div>
             )}
           </div>
