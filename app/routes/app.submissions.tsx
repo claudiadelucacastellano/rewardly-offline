@@ -1,7 +1,8 @@
 export default function AdminSubmissionsPage() {
   return (
-    <div style={{ padding: 40 }}>
-      <h1>TEST SUBMISSIONS</h1>
+    <div>
+      <h1>Tickets offline</h1>
+      <p>Ruta de submissions funcionando correctamente.</p>
     </div>
   );
 }

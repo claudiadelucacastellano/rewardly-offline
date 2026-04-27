@@ -1,6 +1,6 @@
 client_id = "e215539342b226107055ddd9f5665ff3"
 name = "Rewardly Offline"
-application_url = "https://loyalty-app-engine.onrender.com"
+application_url = "https://rewardly-offline.onrender.com"
 embedded = true
 
 [build]
@@ -21,4 +21,4 @@ api_version = "2026-07"
 scopes = "read_customers,write_customers,read_orders,write_app_proxy"
 
 [auth]
-redirect_urls = [ "https://loyalty-app-engine.onrender.com/api/auth" ]
+redirect_urls = [ "https://rewardly-offline.onrender.com/api/auth" ]

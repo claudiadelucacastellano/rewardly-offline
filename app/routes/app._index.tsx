@@ -1,7 +1,8 @@
 export default function Index() {
   return (
-    <div style={{ padding: 40, color: "red", fontSize: 32 }}>
-      TEST HOME OFFLINE
+    <div>
+      <h1>Rewardly Offline</h1>
+      <p>Panel para revisar tickets offline y asignar puntos a clientes.</p>
     </div>
   );
 }
