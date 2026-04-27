@@ -12,13 +12,42 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const normalizedSubmissions = submissions.map((s) => ({
     ...s,
-    fileUrl:
-      s.fileUrl.startsWith("http")
-        ? s.fileUrl
-        : `${origin}${s.fileUrl.startsWith("/") ? "" : "/"}${s.fileUrl}`,
+    fileUrl: s.fileUrl.startsWith("http")
+      ? s.fileUrl
+      : `${origin}${s.fileUrl.startsWith("/") ? "" : "/"}${s.fileUrl}`,
   }));
 
   return { submissions: normalizedSubmissions };
+}
+
+function statusBadge(status: string) {
+  const styles: Record<string, { bg: string; color: string; label: string }> = {
+    pending: { bg: "#fff7ed", color: "#b45309", label: "Pendiente" },
+    approved: { bg: "#ecfdf3", color: "#027a48", label: "Aprobado" },
+    rejected: { bg: "#fef3f2", color: "#b42318", label: "Rechazado" },
+  };
+
+  const current = styles[status] || {
+    bg: "#f2f4f7",
+    color: "#344054",
+    label: status,
+  };
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        padding: "4px 10px",
+        borderRadius: 999,
+        background: current.bg,
+        color: current.color,
+        fontSize: 13,
+        fontWeight: 700,
+      }}
+    >
+      {current.label}
+    </span>
+  );
 }
 
 export default function AdminSubmissionsPage() {
@@ -30,7 +59,7 @@ export default function AdminSubmissionsPage() {
     const awardedPoints = Number(pointsById[submissionId] || "0");
 
     if (!Number.isInteger(awardedPoints) || awardedPoints <= 0) {
-      alert("Introduce puntos válidos");
+      alert("Introduce una cantidad válida de puntos.");
       return;
     }
 
@@ -47,7 +76,6 @@ export default function AdminSubmissionsPage() {
     });
 
     const data = await res.json();
-
     setProcessingId("");
 
     if (!res.ok || !data.ok) {
@@ -72,7 +100,6 @@ export default function AdminSubmissionsPage() {
     });
 
     const data = await res.json();
-
     setProcessingId("");
 
     if (!res.ok || !data.ok) {
@@ -84,69 +111,185 @@ export default function AdminSubmissionsPage() {
   }
 
   return (
-    <div>
-      <h1>Tickets offline</h1>
+    <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: 0, fontSize: 32 }}>Tickets offline</h1>
+        <p style={{ color: "#667085", marginTop: 8 }}>
+          Revisa tickets enviados por clientes, valida la compra y asigna puntos.
+        </p>
+      </div>
 
-      {submissions.length === 0 && <p>No hay tickets aún.</p>}
+      {submissions.length === 0 && (
+        <div
+          style={{
+            border: "1px solid #e5e7eb",
+            borderRadius: 16,
+            padding: 28,
+            background: "#fff",
+          }}
+        >
+          <h3 style={{ marginTop: 0 }}>No hay tickets aún</h3>
+          <p style={{ color: "#667085", marginBottom: 0 }}>
+            Cuando un cliente suba un ticket desde la landing, aparecerá aquí.
+          </p>
+        </div>
+      )}
 
-      <div style={{ display: "grid", gap: 16 }}>
+      <div style={{ display: "grid", gap: 18 }}>
         {submissions.map((s) => (
           <div
             key={s.id}
             style={{
-              border: "1px solid #ccc",
-              padding: 16,
-              borderRadius: 8,
+              border: "1px solid #e5e7eb",
+              borderRadius: 18,
+              padding: 22,
+              background: "#fff",
+              boxShadow: "0 8px 24px rgba(16, 24, 40, 0.04)",
             }}
           >
-            <p><strong>ID:</strong> {s.id}</p>
-            <p><strong>Status:</strong> {s.status}</p>
-            <p><strong>Customer:</strong> {s.customerId}</p>
-            <p><strong>Email:</strong> {s.customerEmail || "-"}</p>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 16,
+                alignItems: "flex-start",
+                marginBottom: 18,
+              }}
+            >
+              <div>
+                <h3 style={{ margin: "0 0 6px", fontSize: 20 }}>
+                  Ticket de {s.customerEmail || "cliente"}
+                </h3>
+                <p style={{ margin: 0, color: "#667085", fontSize: 14 }}>
+                  ID: {s.id}
+                </p>
+              </div>
 
-            <p>
-              <strong>Archivo:</strong>{" "}
-              <a href={s.fileUrl} target="_blank" rel="noreferrer">
-                {s.fileName || "Ver ticket"}
-              </a>
-            </p>
+              {statusBadge(s.status)}
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: 14,
+                marginBottom: 18,
+              }}
+            >
+              <Info label="Customer ID" value={s.customerId} />
+              <Info label="Email" value={s.customerEmail || "-"} />
+              <Info label="Archivo" value={s.fileName || "Ver ticket"} link={s.fileUrl} />
+              <Info
+                label="Creado"
+                value={new Date(s.createdAt).toLocaleString("es-ES")}
+              />
+            </div>
 
             {s.status === "pending" && (
-              <>
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Puntos a otorgar"
-                  value={pointsById[s.id] || ""}
-                  onChange={(e) =>
-                    setPointsById((prev) => ({
-                      ...prev,
-                      [s.id]: e.target.value,
-                    }))
-                  }
-                  style={{ padding: 8, marginBottom: 12, width: 220 }}
-                />
-
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button
-                    onClick={() => approve(s.id)}
-                    disabled={processingId === s.id}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: 12,
+                  paddingTop: 18,
+                  borderTop: "1px solid #f2f4f7",
+                }}
+              >
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      marginBottom: 6,
+                    }}
                   >
-                    {processingId === s.id ? "Procesando..." : "Approve"}
-                  </button>
-
-                  <button
-                    onClick={() => reject(s.id)}
-                    disabled={processingId === s.id}
-                  >
-                    {processingId === s.id ? "Procesando..." : "Reject"}
-                  </button>
+                    Puntos a otorgar
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Ej. 500"
+                    value={pointsById[s.id] || ""}
+                    onChange={(e) =>
+                      setPointsById((prev) => ({
+                        ...prev,
+                        [s.id]: e.target.value,
+                      }))
+                    }
+                    style={{
+                      width: 180,
+                      height: 40,
+                      padding: "0 12px",
+                      border: "1px solid #d0d5dd",
+                      borderRadius: 10,
+                    }}
+                  />
                 </div>
-              </>
+
+                <button
+                  onClick={() => approve(s.id)}
+                  disabled={processingId === s.id}
+                  style={{
+                    height: 40,
+                    padding: "0 18px",
+                    borderRadius: 10,
+                    border: "0",
+                    background: "#111827",
+                    color: "#fff",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {processingId === s.id ? "Procesando..." : "Aprobar"}
+                </button>
+
+                <button
+                  onClick={() => reject(s.id)}
+                  disabled={processingId === s.id}
+                  style={{
+                    height: 40,
+                    padding: "0 18px",
+                    borderRadius: 10,
+                    border: "1px solid #d0d5dd",
+                    background: "#fff",
+                    color: "#344054",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {processingId === s.id ? "Procesando..." : "Rechazar"}
+                </button>
+              </div>
             )}
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function Info({
+  label,
+  value,
+  link,
+}: {
+  label: string;
+  value: string;
+  link?: string;
+}) {
+  return (
+    <div>
+      <div style={{ fontSize: 12, color: "#667085", marginBottom: 4 }}>
+        {label}
+      </div>
+      {link ? (
+        <a href={link} target="_blank" rel="noreferrer">
+          {value}
+        </a>
+      ) : (
+        <div style={{ fontWeight: 600 }}>{value}</div>
+      )}
     </div>
   );
 }
