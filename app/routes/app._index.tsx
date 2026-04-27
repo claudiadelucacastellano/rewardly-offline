@@ -1,6 +1,32 @@
 import { Link } from "react-router";
+import type { LoaderFunctionArgs } from "react-router";
+import { useLoaderData } from "react-router";
+import prisma from "../db.server";
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const submissions = await prisma.offlineSubmission.findMany();
+
+  const pending = submissions.filter((s) => s.status === "pending").length;
+  const approved = submissions.filter((s) => s.status === "approved").length;
+  const rejected = submissions.filter((s) => s.status === "rejected").length;
+
+  const totalAwardedPoints = submissions.reduce(
+    (sum, s) => sum + (s.awardedPoints || 0),
+    0
+  );
+
+  return {
+    pending,
+    approved,
+    rejected,
+    totalAwardedPoints,
+  };
+}
 
 export default function Index() {
+  const { pending, approved, rejected, totalAwardedPoints } =
+    useLoaderData<typeof loader>();
+
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", fontFamily: "Inter, sans-serif" }}>
       <div
@@ -45,6 +71,20 @@ export default function Index() {
       <div
         style={{
           display: "grid",
+          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+          gap: 16,
+          marginBottom: 24,
+        }}
+      >
+        <Metric title="Pendientes" value={pending} tone="orange" />
+        <Metric title="Aprobados" value={approved} tone="green" />
+        <Metric title="Rechazados" value={rejected} tone="red" />
+        <Metric title="Puntos otorgados" value={totalAwardedPoints} tone="dark" />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
           gap: 16,
         }}
@@ -63,6 +103,54 @@ export default function Index() {
           title="Historial conectado"
           text="Los puntos aprobados quedan guardados y sincronizados con Rewardly."
         />
+      </div>
+    </div>
+  );
+}
+
+function Metric({
+  title,
+  value,
+  tone,
+}: {
+  title: string;
+  value: number;
+  tone: "orange" | "green" | "red" | "dark";
+}) {
+  const colors = {
+    orange: { bg: "#fff7ed", color: "#b45309" },
+    green: { bg: "#ecfdf3", color: "#027a48" },
+    red: { bg: "#fef3f2", color: "#b42318" },
+    dark: { bg: "#f2f4f7", color: "#111827" },
+  };
+
+  return (
+    <div
+      style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: 18,
+        padding: 22,
+        background: "#fff",
+        boxShadow: "0 8px 24px rgba(16, 24, 40, 0.04)",
+      }}
+    >
+      <div
+        style={{
+          display: "inline-flex",
+          padding: "5px 10px",
+          borderRadius: 999,
+          background: colors[tone].bg,
+          color: colors[tone].color,
+          fontSize: 13,
+          fontWeight: 800,
+          marginBottom: 12,
+        }}
+      >
+        {title}
+      </div>
+
+      <div style={{ fontSize: 34, fontWeight: 900, color: "#111827" }}>
+        {value.toLocaleString("es-ES")}
       </div>
     </div>
   );
