@@ -2,6 +2,10 @@ import { json, type ActionFunctionArgs } from "@remix-run/node";
 import prisma from "../db.server";
 import { generateFileHash, storeTicketFile } from "../services/offline-files.server";
 
+export async function loader() {
+  return json({ ok: false, error: "Use POST" }, { status: 405 });
+}
+
 function buildDuplicateCheckKey({
   shopDomain,
   customerId,
