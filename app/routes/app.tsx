@@ -20,6 +20,7 @@ export default function App() {
         <s-link href="/app">Home</s-link>
         {/* @ts-ignore */}
         <s-link href="/app/submissions">Tickets</s-link>
+        <s-link href="/app/setup">Setup</s-link>
       </s-app-nav>
 
       <div style={{ padding: 24 }}>
