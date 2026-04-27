@@ -9,6 +9,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const pending = submissions.filter((s) => s.status === "pending").length;
   const approved = submissions.filter((s) => s.status === "approved").length;
   const rejected = submissions.filter((s) => s.status === "rejected").length;
+  const totalSubmissions = submissions.length;
 
   const totalAwardedPoints = submissions.reduce(
     (sum, s) => sum + (s.awardedPoints || 0),
@@ -20,11 +21,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
     approved,
     rejected,
     totalAwardedPoints,
+    totalSubmissions,
   };
 }
 
 export default function Index() {
-  const { pending, approved, rejected, totalAwardedPoints } =
+  const { pending, approved, rejected, totalAwardedPoints, totalSubmissions  } =
     useLoaderData<typeof loader>();
 
   return (
@@ -76,10 +78,11 @@ export default function Index() {
           marginBottom: 24,
         }}
       >
-        <Metric title="Pendientes" value={pending} tone="orange" />
-        <Metric title="Aprobados" value={approved} tone="green" />
-        <Metric title="Rechazados" value={rejected} tone="red" />
-        <Metric title="Puntos otorgados" value={totalAwardedPoints} tone="dark" />
+        <Metric title="Pendientes" value={pending} tone="orange" to="/app/submissions?status=pending" />
+        <Metric title="Aprobados" value={approved} tone="green" to="/app/submissions?status=approved" />
+        <Metric title="Rechazados" value={rejected} tone="red" to="/app/submissions?status=rejected" />
+        <Metric title="Tickets totales" value={totalSubmissions} tone="dark" to="/app/submissions?status=all" />
+        <Metric title="Puntos otorgados" value={totalAwardedPoints} tone="dark" to="/app/submissions?status=approved" />
       </div>
 
       <div
@@ -112,10 +115,12 @@ function Metric({
   title,
   value,
   tone,
+  to,
 }: {
   title: string;
   value: number;
   tone: "orange" | "green" | "red" | "dark";
+  to: string;
 }) {
   const colors = {
     orange: { bg: "#fff7ed", color: "#b45309" },
@@ -125,13 +130,16 @@ function Metric({
   };
 
   return (
-    <div
+    <Link
+      to={to}
       style={{
         border: "1px solid #e5e7eb",
         borderRadius: 18,
         padding: 22,
         background: "#fff",
         boxShadow: "0 8px 24px rgba(16, 24, 40, 0.04)",
+        textDecoration: "none",
+        display: "block",
       }}
     >
       <div
@@ -152,7 +160,7 @@ function Metric({
       <div style={{ fontSize: 34, fontWeight: 900, color: "#111827" }}>
         {value.toLocaleString("es-ES")}
       </div>
-    </div>
+    </Link>
   );
 }
 

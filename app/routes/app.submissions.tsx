@@ -1,4 +1,4 @@
-import { useLoaderData } from "react-router";
+import { useLoaderData, useSearchParams } from "react-router";
 import type { LoaderFunctionArgs } from "react-router";
 import { useState } from "react";
 import prisma from "../db.server";
@@ -26,7 +26,23 @@ export default function AdminSubmissionsPage() {
   const { submissions } = useLoaderData<typeof loader>();
   const [processingId, setProcessingId] = useState("");
   const [pointsById, setPointsById] = useState<Record<string, string>>({});
-  const [filter, setFilter] = useState<FilterStatus>("pending");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initialStatus = searchParams.get("status") as FilterStatus | null;
+
+  const [filter, setFilter] = useState<FilterStatus>(
+    initialStatus === "approved" ||
+    initialStatus === "rejected" ||
+    initialStatus === "all" ||
+    initialStatus === "pending"
+      ? initialStatus
+      : "pending"
+  );
+
+  function changeFilter(nextFilter: FilterStatus) {
+    setFilter(nextFilter);
+    setSearchParams({ status: nextFilter });
+  }
 
   const pendingCount = submissions.filter((s) => s.status === "pending").length;
   const approvedCount = submissions.filter((s) => s.status === "approved").length;
@@ -102,22 +118,22 @@ export default function AdminSubmissionsPage() {
           <FilterButton
             label={`Pendientes (${pendingCount})`}
             active={filter === "pending"}
-            onClick={() => setFilter("pending")}
+            onClick={() => changeFilter("pending")}
           />
           <FilterButton
             label={`Aprobados (${approvedCount})`}
             active={filter === "approved"}
-            onClick={() => setFilter("approved")}
+            onClick={() => changeFilter("approved")}
           />
           <FilterButton
             label={`Rechazados (${rejectedCount})`}
             active={filter === "rejected"}
-            onClick={() => setFilter("rejected")}
+            onClick={() => changeFilter("rejected")}
           />
           <FilterButton
             label={`Todos (${submissions.length})`}
             active={filter === "all"}
-            onClick={() => setFilter("all")}
+            onClick={() => changeFilter("all")}
           />
         </div>
       </div>
